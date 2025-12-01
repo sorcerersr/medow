@@ -24,12 +24,14 @@ enum View {
 struct AppState {
     view: View,
     error: Option<String>,
+    is_loading: bool,
 }
 
 // init application wide state
 static APP_STATE: GlobalSignal<AppState> = Signal::global(|| AppState {
     view: View::Search,
     error: Option::None,
+    is_loading: false,
 });
 
 fn main() {

@@ -1,16 +1,18 @@
-use dioxus::prelude::*;
-use mediathekviewweb::Mediathek;
 use crate::{
     pagination::{Pagination, SearchItem},
     APP_STATE, MEDOW_USER_AGENT,
 };
+use dioxus::prelude::*;
+use mediathekviewweb::Mediathek;
 
 pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, offset: usize) {
     println!("in the search callback with query string {query}");
+    APP_STATE.write().is_loading = true;
     let mediathek_client = match Mediathek::new(MEDOW_USER_AGENT.try_into().unwrap()) {
         Ok(client) => client,
         Err(error) => {
             APP_STATE.write().error = Some(format!("{error:?}"));
+            APP_STATE.write().is_loading = false;
             return;
         }
     };
@@ -30,9 +32,13 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
         .offset(offset);
 
     let search_result = match query.await {
-        Ok(result) => result,
+        Ok(result) => {
+            APP_STATE.write().is_loading = false;
+            result
+        }
         Err(error) => {
             APP_STATE.write().error = Some(format!("{error:?}"));
+            APP_STATE.write().is_loading = false;
             return;
         }
     };
