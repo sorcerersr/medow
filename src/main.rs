@@ -41,9 +41,11 @@ fn main() {
 
     dioxus::LaunchBuilder::new()
         .with_cfg(
-            dioxus::desktop::Config::new()
-                .with_menu(None)
-                .with_window(tao::window::WindowBuilder::new().with_maximized(true)),
+            dioxus::desktop::Config::new().with_menu(None).with_window(
+                tao::window::WindowBuilder::new()
+                    .with_title("Medow")
+                    .with_maximized(true),
+            ),
         )
         .launch(App);
 }
