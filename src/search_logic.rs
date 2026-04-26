@@ -43,6 +43,9 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
         }
     };
 
+    // Store total result count from API for pagination
+    pagination.write().total = search_result.query_info.total_results as usize;
+
     // Map SearchResult to SearchItem
     let mut search_items: Vec<SearchItem> = search_result
         .results
