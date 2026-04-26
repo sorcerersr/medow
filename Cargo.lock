@@ -747,7 +747,7 @@ dependencies = [
  "objc_id",
  "percent-encoding",
  "rand 0.9.2",
- "rfd",
+ "rfd 0.15.4",
  "rustc-hash 2.1.1",
  "serde",
  "serde_json",
@@ -2452,11 +2452,14 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "dioxus",
+ "dirs",
  "mediathekviewweb",
  "reqwest 0.11.27",
+ "rfd 0.17.2",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
+ "toml",
 ]
 
 [[package]]
@@ -3476,6 +3479,33 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "rfd"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
+dependencies = [
+ "block2",
+ "dispatch2",
+ "js-sys",
+ "libc",
+ "log",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation",
+ "percent-encoding",
+ "pollster",
+ "raw-window-handle 0.6.2",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wayland-backend",
+ "wayland-client",
+ "wayland-protocols",
+ "web-sys",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

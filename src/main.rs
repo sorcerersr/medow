@@ -1,11 +1,13 @@
 use dioxus::desktop::tao;
 use dioxus::prelude::*;
 
+mod config;
 mod downloads_view;
 mod pagination;
 mod search_logic;
 mod search_view;
 mod settings_view;
+mod toast;
 mod utils;
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -41,6 +43,9 @@ static APP_STATE: GlobalSignal<AppState> = Signal::global(|| AppState {
     is_loading: false,
 });
 
+// Global config signal
+static CONFIG: GlobalSignal<config::AppConfig> = Signal::global(|| config::load_config());
+
 fn main() {
     // There are some issues on wayland like the window buttons
     // not reacting - so fallback to x11
@@ -71,5 +76,6 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: PICO_CSS }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
         div { class: "layout-container", {current_view} }
+        toast::ToastContainer {}
     }
 }
