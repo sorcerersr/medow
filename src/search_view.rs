@@ -1,4 +1,4 @@
-use crate::{navigate, pagination::Pagination, search_logic, View, APP_STATE};
+use crate::{downloads, navigate, pagination::Pagination, search_logic, View, APP_STATE};
 use dioxus::prelude::*;
 
 #[component]
@@ -64,8 +64,31 @@ pub fn header_bar(pagination: Signal<Pagination>, mut searchstring: Signal<Strin
 
 #[component]
 fn media_table(pagination: Signal<Pagination>) -> Element {
-    // Create a signal for the header checkbox state
-    let mut header_selected = use_signal(|| false);
+    let header_checked = use_memo(move || {
+        let items = pagination.read().items.clone();
+        if items.is_empty() {
+            return false;
+        }
+        items.iter().all(|item| downloads::is_selected(&item.title))
+    });
+
+    // Pre-compute item data for RSX loop (must be outside rsx! block)
+    let item_data: Vec<_> = pagination
+        .read()
+        .items
+        .iter()
+        .map(|item| {
+            (
+                item.title.clone(),
+                downloads::is_selected(&item.title),
+                item.topic.clone(),
+                item.timestamp.clone(),
+                item.duration.clone(),
+                item.quality.clone(),
+            )
+        })
+        .collect();
+
     rsx! {
         table {
             thead {
@@ -74,13 +97,16 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
                         scope: "col",
                         input {
                             r#type: "checkbox",
-                            checked: header_selected(),
-                            oninput: move |e| {
+                            checked: header_checked(),
+                            onchange: move |e| {
                                 let checked = e.checked();
-                                header_selected.set(checked);
-                                // Update all items' selected state
-                                for item in pagination.write().items.iter_mut() {
-                                    item.selected = checked;
+                                let items: Vec<_> = pagination.read().items.clone();
+                                for item in items {
+                                    if checked {
+                                        downloads::toggle_selection(item.title.clone());
+                                    } else {
+                                        downloads::toggle_selection(item.title);
+                                    }
                                 }
                             }
                         }
@@ -93,36 +119,28 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
                 }
             }
             tbody {
-                // Render each item as a table row
-                for (index, item) in pagination.read().items.iter().enumerate() {
+                for (title, checked, topic, timestamp, duration, quality) in item_data {
                     tr {
                         td {
                             input {
                                 r#type: "checkbox",
-                                checked: item.selected,
-                                oninput: move |e| {
+                                checked: checked,
+                                onchange: move |e| {
                                     let checked = e.checked();
-                                    // Update the specific item by index
-                                    pagination.write().items[index].selected = checked;
-
-                                    // Update header checkbox based on all items
-                                    let all_selected = pagination.read().items.iter().all(|item| item.selected);
-                                    let any_selected = pagination.read().items.iter().any(|item| item.selected);
-
-                                    if all_selected {
-                                        header_selected.set(true);
-                                    } else if !any_selected {
-                                        header_selected.set(false);
+                                    let title_for_toggle = title.clone();
+                                    if checked {
+                                        downloads::toggle_selection(title_for_toggle);
+                                    } else {
+                                        downloads::toggle_selection(title_for_toggle);
                                     }
                                 }
                             }
-
                         }
-                        td { "{item.title}" }
-                        td { "{item.topic}" }
-                        td { "{item.timestamp}" }
-                        td { "{item.duration}" }
-                        td { "{item.quality}" }
+                        td { "{title}" }
+                        td { "{topic}" }
+                        td { "{timestamp}" }
+                        td { "{duration}" }
+                        td { "{quality}" }
                     }
                 }
             }
@@ -147,6 +165,44 @@ pub fn search_view() -> Element {
                     media_table { pagination }
                 }
             } // article
+
+            // Download action buttons - right-aligned
+            if !APP_STATE.read().is_loading {
+                div {
+                    class: "download-buttons",
+                    button {
+                        class: "button",
+                        onclick: move |_| {
+                            // Collect selected items from current page
+                            let selected_items: Vec<downloads::DownloadItem> = pagination
+                                .read()
+                                .items
+                                .iter()
+                                .filter(|item| downloads::is_selected(&item.title))
+                                .map(|item| downloads::DownloadItem {
+                                    title: item.title.clone(),
+                                    url: item.video_url.clone(),
+                                    filename: downloads::generate_filename(&item.title, &item.video_url),
+                                    status: downloads::DownloadStatus::Idle,
+                                })
+                                .collect();
+
+                            if !selected_items.is_empty() {
+                                downloads::add_to_download_queue(selected_items);
+                                navigate(View::Download);
+                            }
+                        },
+                        "Download",
+                    },
+                    button {
+                        class: "button",
+                        onclick: move |_| {
+                            downloads::clear_selections();
+                        },
+                        "Reset",
+                    },
+                }
+            }
         }
         footer {
             class: "sticky-footer",

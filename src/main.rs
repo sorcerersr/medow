@@ -2,6 +2,7 @@ use dioxus::desktop::tao;
 use dioxus::prelude::*;
 
 mod config;
+mod downloads;
 mod downloads_view;
 mod pagination;
 mod search_logic;

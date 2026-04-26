@@ -225,3 +225,31 @@ footer {
 .dir-input-group input {
 	flex: 1;
 }
+
+/* Download action buttons */
+.download-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	padding: 1rem 0;
+}
+
+/* Download status colors */
+.status-idle {
+	color: var(--pico-muted-color);
+}
+
+.status-downloading {
+	color: var(--pico-primary);
+	font-weight: 600;
+}
+
+.status-complete {
+	color: var(--pico-success);
+	font-weight: 600;
+}
+
+.status-failed {
+	color: var(--pico-danger);
+	font-weight: 600;
+}
