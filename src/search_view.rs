@@ -184,7 +184,8 @@ pub fn search_view() -> Element {
                         } else {
                             button { class: "button", disabled: true, "Next →" }
                         }
-                        {(1..=pagination.read().total_pages()).map(|page| {
+                        {pagination.read().visible_pages().iter().map(|page| {
+                            let page = *page;
                             let is_current = page == pagination.read().current_page();
                             rsx! {
                                 button {

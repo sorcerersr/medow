@@ -101,6 +101,23 @@ impl Pagination {
         (start, end)
     }
 
+    /// Returns a list of page numbers to display (max 5, centered on current page)
+    pub fn visible_pages(&self) -> Vec<usize> {
+        let total = self.total_pages();
+        if total <= 5 {
+            return (1..=total).collect();
+        }
+        let current = self.current_page();
+        let half = 2; // pages on each side of current
+        let mut start = (current as i64 - half).max(1) as usize;
+        let mut end = start + 4; // 5 pages inclusive
+        if end > total {
+            end = total;
+            start = end - 4;
+        }
+        (start..=end).collect()
+    }
+
     /// Gets pagination info as a string
     pub fn info(&self) -> String {
         format!(
@@ -430,5 +447,55 @@ mod tests {
             items: vec![],
         };
         assert_eq!(pagination.info(), "Page 2/2 (Items 16-30 of 30)");
+    }
+
+    #[test]
+    fn test_visible_pages_fewer_than_5() {
+        let pagination = Pagination {
+            total: 30,
+            offset: 0,
+            items: vec![],
+        };
+        assert_eq!(pagination.visible_pages(), vec![1, 2]);
+    }
+
+    #[test]
+    fn test_visible_pages_exactly_5() {
+        let pagination = Pagination {
+            total: 75,
+            offset: 0,
+            items: vec![],
+        };
+        assert_eq!(pagination.visible_pages(), vec![1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn test_visible_pages_current_middle() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 45,
+            items: vec![],
+        };
+        assert_eq!(pagination.visible_pages(), vec![2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_visible_pages_near_start() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 15,
+            items: vec![],
+        };
+        assert_eq!(pagination.visible_pages(), vec![1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn test_visible_pages_near_end() {
+        let pagination = Pagination {
+            total: 225,
+            offset: 195,
+            items: vec![],
+        };
+        assert_eq!(pagination.visible_pages(), vec![11, 12, 13, 14, 15]);
     }
 }
