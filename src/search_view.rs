@@ -172,6 +172,21 @@ pub fn search_view() -> Element {
                         }
                     }
                     ul {
+                        {pagination.read().visible_pages().iter().map(|page| {
+                            let page = *page;
+                            let is_current = page == pagination.read().current_page();
+                            let offset = (page - 1) * pagination.read().page_size();
+                            rsx! {
+                                button {
+                                    class: "button",
+                                    disabled: is_current,
+                                    onclick: move |_| async move {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    },
+                                    "{page}"
+                                }
+                            }
+                        })}
                         if pagination.read().has_next_page() {
                             button {
                                 class: "button",
@@ -186,20 +201,6 @@ pub fn search_view() -> Element {
                         } else {
                             button { class: "button", disabled: true, "Next →" }
                         }
-                        {pagination.read().visible_pages().iter().map(|page| {
-                            let page = *page;
-                            let is_current = page == pagination.read().current_page();
-                            let offset = (page - 1) * pagination.read().page_size();
-                            rsx! {
-                                button {
-                                    class: if is_current { "button current-page" } else { "button" },
-                                    onclick: move |_| async move {
-                                        search_logic::perform_search(pagination, searchstring(), offset).await;
-                                    },
-                                    "{page}"
-                                }
-                            }
-                        })}
                     }
                 }
             }
