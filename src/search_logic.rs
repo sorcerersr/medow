@@ -1,9 +1,32 @@
 use crate::{
     pagination::{Pagination, SearchItem},
-    APP_STATE, MEDOW_USER_AGENT,
+    APP_STATE, MEDOW_USER_AGENT, CONFIG,
 };
 use dioxus::prelude::*;
 use mediathekviewweb::Mediathek;
+
+/// Select the best video URL based on quality preference
+fn select_best_url(
+    item: &mediathekviewweb::models::Item,
+    preferred: &str,
+) -> (String, String) {
+    let has_hd = item.url_video_hd.is_some();
+    let has_sd = !item.url_video.is_empty();
+    let has_lq = item.url_video_low.is_some();
+
+    match preferred {
+        "HD" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
+        "HD" if has_sd => (item.url_video.clone(), String::from("SD")),
+        "HD" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
+        "SD" if has_sd => (item.url_video.clone(), String::from("SD")),
+        "SD" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
+        "SD" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
+        "LQ" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
+        "LQ" if has_sd => (item.url_video.clone(), String::from("SD")),
+        "LQ" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
+        _ => (String::from(""), String::from("")),
+    }
+}
 
 pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, offset: usize) {
     eprintln!("[search] query: {query}, offset: {offset}");
@@ -59,23 +82,16 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
     pg.total = search_result.query_info.total_results as usize;
     pg.offset = offset;
     drop(pg);
+    // Get preferred quality from config
+    let preferred_quality = CONFIG.read().quality_preference.clone();
 
     // Map SearchResult to SearchItem
     let mut search_items: Vec<SearchItem> = search_result
         .results
         .into_iter()
         .map(|item| {
-            // Determine the best video URL available
-            let (video_url, quality) = if !item.url_video.is_empty() {
-                (item.url_video, String::from("SD"))
-            } else if let Some(url) = item.url_video_hd {
-                (url, String::from("HD"))
-            } else {
-                (
-                    item.url_video_low.unwrap_or(String::from("")),
-                    String::from("LQ"),
-                )
-            };
+            // Determine the best video URL based on quality preference
+            let (video_url, quality) = select_best_url(&item, &preferred_quality);
 
             // Handle optional fields with defaults
             let timestamp = crate::utils::timestamp_to_german_datetime(item.timestamp);
