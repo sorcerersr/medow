@@ -1,9 +1,8 @@
-use crate::{pagination::Pagination, search_logic, APP_STATE, View, navigate};
+use crate::{navigate, pagination::Pagination, search_logic, View, APP_STATE};
 use dioxus::prelude::*;
 
 #[component]
-pub fn header_bar(pagination: Signal<Pagination>) -> Element {
-    let mut searchstring = use_signal(String::new);
+pub fn header_bar(pagination: Signal<Pagination>, mut searchstring: Signal<String>) -> Element {
     rsx! {
         header {
             class: "sticky-header",
@@ -134,9 +133,10 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
 #[component]
 pub fn search_view() -> Element {
     let pagination = use_signal(Pagination::new);
+    let searchstring = use_signal(String::new);
 
     rsx! {
-        header_bar { pagination }
+        header_bar { pagination, searchstring }
         main {
             article {
                 padding_bottom: 0,
@@ -155,10 +155,82 @@ pub fn search_view() -> Element {
                 padding_top: 0,
                 nav {
                     ul {
-                        li { "left" }
+                        li { "{pagination.read().info()}" }
+                        if pagination.read().has_previous_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
+                                    let offset = pagination.read().first_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "« First"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "« First" }
+                        }
+                        if pagination.read().has_previous_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
+                                    let offset = pagination.read().previous_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "← Prev"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "← Prev" }
+                        }
                     }
                     ul {
-                        li { "right" }
+                        {pagination.read().visible_pages().iter().map(|page| {
+                            let page = *page;
+                            let is_current = page == pagination.read().current_page();
+                            let offset = (page - 1) * pagination.read().page_size();
+                            rsx! {
+                                button {
+                                    class: "button",
+                                    disabled: is_current,
+                                    onclick: move |_| async move {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    },
+                                    "{page}"
+                                }
+                            }
+                        })}
+                    }
+                    ul {
+                        if pagination.read().has_next_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
+                                    let offset = pagination.read().next_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "Next →"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "Next →" }
+                        }
+                        if pagination.read().has_next_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
+                                    let offset = pagination.read().last_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "Last »"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "Last »" }
+                        }
                     }
                 }
             }

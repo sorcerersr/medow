@@ -29,12 +29,22 @@ fn select_best_url(
 }
 
 pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, offset: usize) {
-    println!("in the search callback with query string {query}");
+    eprintln!("[search] query: {query}, offset: {offset}");
     APP_STATE.write().is_loading = true;
-    let mediathek_client = match Mediathek::new(MEDOW_USER_AGENT.try_into().unwrap()) {
+    let user_agent = match MEDOW_USER_AGENT.try_into() {
+        Ok(ua) => ua,
+        Err(error) => {
+            eprintln!("[search] invalid user agent: {error}");
+            APP_STATE.write().error = Some(format!("Invalid user agent: {error}"));
+            APP_STATE.write().is_loading = false;
+            return;
+        }
+    };
+    let mediathek_client = match Mediathek::new(user_agent) {
         Ok(client) => client,
         Err(error) => {
-            APP_STATE.write().error = Some(format!("{error:?}"));
+            eprintln!("[search] failed to create client: {error}");
+            APP_STATE.write().error = Some(format!("Failed to create client: {error}"));
             APP_STATE.write().is_loading = false;
             return;
         }
@@ -60,12 +70,18 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
             result
         }
         Err(error) => {
-            APP_STATE.write().error = Some(format!("{error:?}"));
+            eprintln!("[search] API error: {error}");
+            APP_STATE.write().error = Some(format!("Search failed: {error}"));
             APP_STATE.write().is_loading = false;
             return;
         }
     };
 
+    // Store total result count and current offset for pagination
+    let mut pg = pagination.write();
+    pg.total = search_result.query_info.total_results as usize;
+    pg.offset = offset;
+    drop(pg);
     // Get preferred quality from config
     let preferred_quality = CONFIG.read().quality_preference.clone();
 
