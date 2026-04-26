@@ -11,6 +11,7 @@ fn header_bar() -> Element {
                 padding_top: 0,
                 nav {
                     ul {
+                        margin_left: "auto",
                         if APP_STATE.read().view != View::Search {
                             li {
                                 button {
