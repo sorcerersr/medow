@@ -96,6 +96,6 @@ mod tests {
     fn test_config_path_exists() {
         let path = config_path();
         assert!(path.ends_with(CONFIG_FILE));
-        assert!(path.contains(CONFIG_DIR));
+        assert!(path.to_string_lossy().contains(CONFIG_DIR));
     }
 }

@@ -27,7 +27,7 @@ pub fn next_id() -> u64 {
     TOAST_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
 }
 
-pub static TOASTS: GlobalSignal<Vec<Toast>> = Signal::global(|| Vec::new());
+pub static TOASTS: GlobalSignal<Vec<Toast>> = Signal::global(Vec::new);
 
 pub fn show_toast(message: &str, toast_type: ToastType) {
     let id = next_id();
@@ -48,7 +48,6 @@ pub fn ToastContainer() -> Element {
     let toasts = TOASTS
         .read()
         .iter()
-        .cloned()
         .map(|t| ToastRenderData {
             id: t.id,
             message: t.message.clone(),

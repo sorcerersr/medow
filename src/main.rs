@@ -44,7 +44,7 @@ static APP_STATE: GlobalSignal<AppState> = Signal::global(|| AppState {
 });
 
 // Global config signal
-static CONFIG: GlobalSignal<config::AppConfig> = Signal::global(|| config::load_config());
+static CONFIG: GlobalSignal<config::AppConfig> = Signal::global(config::load_config);
 
 fn main() {
     // There are some issues on wayland like the window buttons
