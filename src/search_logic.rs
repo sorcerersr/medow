@@ -68,9 +68,9 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
                 selected: false,
                 title: item.title,
                 topic: item.topic,
-                timestamp: timestamp,
-                duration: duration,
-                quality: quality,
+                timestamp,
+                duration,
+                quality,
                 video_url,
             }
         })

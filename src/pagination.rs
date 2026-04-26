@@ -9,12 +9,14 @@ pub struct SearchItem {
     pub video_url: String,
 }
 
+#[allow(dead_code)]
 pub struct Pagination {
     pub total: usize,
     pub offset: usize,
     pub items: Vec<SearchItem>,
 }
 
+#[allow(dead_code)]
 impl Pagination {
     /// Creates a new Pagination instance with default values
     pub fn new() -> Self {
@@ -35,7 +37,7 @@ impl Pagination {
         if self.total == 0 {
             0
         } else {
-            (self.total + self.page_size() - 1) / self.page_size()
+            self.total.div_ceil(self.page_size())
         }
     }
 

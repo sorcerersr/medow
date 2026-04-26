@@ -1,9 +1,11 @@
 use dioxus::desktop::tao;
 use dioxus::prelude::*;
 
+mod downloads_view;
 mod pagination;
 mod search_logic;
 mod search_view;
+mod settings_view;
 mod utils;
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -12,9 +14,14 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 
 const MEDOW_USER_AGENT: &str = "Mozilla/5.0 Linux Medow/0.1";
 
+// Navigation function
+pub(crate) fn navigate(view: View) {
+    APP_STATE.write().view = view;
+}
+
 // Enumeration to define the navigatable views
-#[derive(Clone, Copy)]
-enum View {
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum View {
     Search,
     Settings,
     Download,
@@ -41,20 +48,28 @@ fn main() {
 
     dioxus::LaunchBuilder::new()
         .with_cfg(
-            dioxus::desktop::Config::new()
-                .with_menu(None)
-                .with_window(tao::window::WindowBuilder::new().with_maximized(true)),
+            dioxus::desktop::Config::new().with_menu(None).with_window(
+                tao::window::WindowBuilder::new()
+                    .with_title("Medow")
+                    .with_maximized(true),
+            ),
         )
         .launch(App);
 }
 
 #[component]
 fn App() -> Element {
+    let view = APP_STATE.read().view;
+    let current_view = match view {
+        View::Search => rsx! { search_view::search_view {} },
+        View::Download => rsx! { downloads_view::downloads_view {} },
+        View::Settings => rsx! { settings_view::settings_view {} },
+    };
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: PICO_CSS }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
-        div { class: "layout-container", search_view::search_view {} }
-
+        div { class: "layout-container", {current_view} }
     }
 }
