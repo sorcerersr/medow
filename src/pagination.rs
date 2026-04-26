@@ -79,6 +79,25 @@ impl Pagination {
         }
     }
 
+    /// Gets the offset for the first page
+    pub fn first_offset(&self) -> Option<usize> {
+        if self.offset > 0 {
+            Some(0)
+        } else {
+            None
+        }
+    }
+
+    /// Gets the offset for the last page
+    pub fn last_offset(&self) -> Option<usize> {
+        if self.has_next_page() {
+            let last_page = self.total_pages() - 1;
+            Some(last_page * self.page_size())
+        } else {
+            None
+        }
+    }
+
     /// Gets the number of items on the current page
     pub fn items_on_page(&self) -> usize {
         let remaining = self.total - self.offset;
@@ -497,5 +516,55 @@ mod tests {
             items: vec![],
         };
         assert_eq!(pagination.visible_pages(), vec![11, 12, 13, 14, 15]);
+    }
+
+    #[test]
+    fn test_first_offset_on_first_page() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 0,
+            items: vec![],
+        };
+        assert_eq!(pagination.first_offset(), None);
+    }
+
+    #[test]
+    fn test_first_offset_on_second_page() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 15,
+            items: vec![],
+        };
+        assert_eq!(pagination.first_offset(), Some(0));
+    }
+
+    #[test]
+    fn test_last_offset_on_last_page() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 90,
+            items: vec![],
+        };
+        assert_eq!(pagination.last_offset(), None);
+    }
+
+    #[test]
+    fn test_last_offset_on_first_page() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 0,
+            items: vec![],
+        };
+        assert_eq!(pagination.last_offset(), Some(90));
+    }
+
+    #[test]
+    fn test_last_offset_middle_page() {
+        let pagination = Pagination {
+            total: 100,
+            offset: 30,
+            items: vec![],
+        };
+        assert_eq!(pagination.last_offset(), Some(90));
     }
 }

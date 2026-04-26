@@ -160,6 +160,20 @@ pub fn search_view() -> Element {
                             button {
                                 class: "button",
                                 onclick: move |_| async move {
+                                    let offset = pagination.read().first_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "« First"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "« First" }
+                        }
+                        if pagination.read().has_previous_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
                                     let offset = pagination.read().previous_offset();
                                     if let Some(offset) = offset {
                                         search_logic::perform_search(pagination, searchstring(), offset).await;
@@ -187,6 +201,8 @@ pub fn search_view() -> Element {
                                 }
                             }
                         })}
+                    }
+                    ul {
                         if pagination.read().has_next_page() {
                             button {
                                 class: "button",
@@ -200,6 +216,20 @@ pub fn search_view() -> Element {
                             }
                         } else {
                             button { class: "button", disabled: true, "Next →" }
+                        }
+                        if pagination.read().has_next_page() {
+                            button {
+                                class: "button",
+                                onclick: move |_| async move {
+                                    let offset = pagination.read().last_offset();
+                                    if let Some(offset) = offset {
+                                        search_logic::perform_search(pagination, searchstring(), offset).await;
+                                    }
+                                },
+                                "Last »"
+                            }
+                        } else {
+                            button { class: "button", disabled: true, "Last »" }
                         }
                     }
                 }
