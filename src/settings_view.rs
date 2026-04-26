@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::{config, navigate, APP_STATE, CONFIG, View};
+use crate::{config, navigate, View, APP_STATE, CONFIG};
 
 #[component]
 fn header_bar() -> Element {
@@ -43,10 +43,7 @@ pub fn settings_view() -> Element {
     let mut download_dir = use_signal(|| CONFIG.read().default_download_dir.clone());
     let mut quality = use_signal(|| CONFIG.read().quality_preference.clone());
 
-    async fn save_settings(
-        download_dir: &str,
-        quality: &str,
-    ) -> Result<(), String> {
+    async fn save_settings(download_dir: &str, quality: &str) -> Result<(), String> {
         let app_config = config::AppConfig {
             default_download_dir: download_dir.to_string(),
             quality_preference: quality.to_string(),

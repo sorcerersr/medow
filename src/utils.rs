@@ -1,5 +1,5 @@
-use std::time::Duration;
 use chrono::{DateTime, Utc};
+use std::time::Duration;
 
 pub fn timestamp_to_german_datetime(timestamp: i64) -> String {
     // Convert timestamp to DateTime<Utc>

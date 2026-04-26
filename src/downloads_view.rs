@@ -1,4 +1,4 @@
-use crate::{navigate, APP_STATE, View};
+use crate::{navigate, View, APP_STATE};
 use dioxus::prelude::*;
 
 #[component]

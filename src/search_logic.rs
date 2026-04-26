@@ -1,29 +1,44 @@
 use crate::{
     pagination::{Pagination, SearchItem},
-    APP_STATE, MEDOW_USER_AGENT, CONFIG,
+    APP_STATE, CONFIG, MEDOW_USER_AGENT,
 };
 use dioxus::prelude::*;
 use mediathekviewweb::Mediathek;
 
 /// Select the best video URL based on quality preference
-fn select_best_url(
-    item: &mediathekviewweb::models::Item,
-    preferred: &str,
-) -> (String, String) {
+fn select_best_url(item: &mediathekviewweb::models::Item, preferred: &str) -> (String, String) {
     let has_hd = item.url_video_hd.is_some();
     let has_sd = !item.url_video.is_empty();
     let has_lq = item.url_video_low.is_some();
 
     match preferred {
-        "HD" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
+        "HD" if has_hd => (
+            item.url_video_hd.clone().unwrap_or_default(),
+            String::from("HD"),
+        ),
         "HD" if has_sd => (item.url_video.clone(), String::from("SD")),
-        "HD" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
+        "HD" if has_lq => (
+            item.url_video_low.clone().unwrap_or_default(),
+            String::from("LQ"),
+        ),
         "SD" if has_sd => (item.url_video.clone(), String::from("SD")),
-        "SD" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
-        "SD" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
-        "LQ" if has_lq => (item.url_video_low.clone().unwrap_or_default(), String::from("LQ")),
+        "SD" if has_hd => (
+            item.url_video_hd.clone().unwrap_or_default(),
+            String::from("HD"),
+        ),
+        "SD" if has_lq => (
+            item.url_video_low.clone().unwrap_or_default(),
+            String::from("LQ"),
+        ),
+        "LQ" if has_lq => (
+            item.url_video_low.clone().unwrap_or_default(),
+            String::from("LQ"),
+        ),
         "LQ" if has_sd => (item.url_video.clone(), String::from("SD")),
-        "LQ" if has_hd => (item.url_video_hd.clone().unwrap_or_default(), String::from("HD")),
+        "LQ" if has_hd => (
+            item.url_video_hd.clone().unwrap_or_default(),
+            String::from("HD"),
+        ),
         _ => (String::from(""), String::from("")),
     }
 }
