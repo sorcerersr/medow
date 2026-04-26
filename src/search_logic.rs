@@ -54,8 +54,11 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
         }
     };
 
-    // Store total result count from API for pagination
-    pagination.write().total = search_result.query_info.total_results as usize;
+    // Store total result count and current offset for pagination
+    let mut pg = pagination.write();
+    pg.total = search_result.query_info.total_results as usize;
+    pg.offset = offset;
+    drop(pg);
 
     // Map SearchResult to SearchItem
     let mut search_items: Vec<SearchItem> = search_result
