@@ -160,7 +160,8 @@ pub fn search_view() -> Element {
                             button {
                                 class: "button",
                                 onclick: move |_| async move {
-                                    if let Some(offset) = pagination.read().previous_offset() {
+                                    let offset = pagination.read().previous_offset();
+                                    if let Some(offset) = offset {
                                         search_logic::perform_search(pagination, searchstring(), offset).await;
                                     }
                                 },
@@ -175,7 +176,8 @@ pub fn search_view() -> Element {
                             button {
                                 class: "button",
                                 onclick: move |_| async move {
-                                    if let Some(offset) = pagination.read().next_offset() {
+                                    let offset = pagination.read().next_offset();
+                                    if let Some(offset) = offset {
                                         search_logic::perform_search(pagination, searchstring(), offset).await;
                                     }
                                 },
@@ -187,11 +189,11 @@ pub fn search_view() -> Element {
                         {pagination.read().visible_pages().iter().map(|page| {
                             let page = *page;
                             let is_current = page == pagination.read().current_page();
+                            let offset = (page - 1) * pagination.read().page_size();
                             rsx! {
                                 button {
                                     class: if is_current { "button current-page" } else { "button" },
                                     onclick: move |_| async move {
-                                        let offset = (page - 1) * pagination.read().page_size();
                                         search_logic::perform_search(pagination, searchstring(), offset).await;
                                     },
                                     "{page}"

@@ -2,21 +2,31 @@
 
 ## Goal
 
-Connect pagination to the mediathekview API by reading `total_results` from the search response.
+Fix `AlreadyBorrowed` crash when clicking pagination buttons and replace all `unwrap()` calls with graceful error handling.
 
 ## Tasks
 
-### 1. Wire API total_results into Pagination in search_logic.rs
+### 1. Fix borrow conflict in footer onclick handlers (search_view.rs)
 
-- [x] Read `search_result.query_info.total_results` from API response
-- [x] Store it in `pagination.write().total` so pagination UI calculates correct page counts
-- [x] Verify `total_pages()` and `has_next_page()` work correctly with real API data
-- [x] Add `visible_pages()` method — returns max 5 page numbers centered on current page
-- [x] Update footer to use `visible_pages()` instead of all pages
+- [x] Read offset into a local variable before calling `perform_search` — drops the `ReadGuard` before `.write()` is called
+- [x] Apply fix to all 3 footer handlers: Next →, ← Prev, page number buttons
+
+### 2. Fix MEDOW_USER_AGENT unwrap in search_logic.rs
+
+- [x] Replace `MEDOW_USER_AGENT.try_into().unwrap()` with `match` → set `APP_STATE.error` and return early
+
+### 3. Fix search result mapping unwrap in search_logic.rs
+
+- [ ] Replace `item.url_video_low.unwrap_or(String::from(""))` — already uses `unwrap_or`, safe
+- [x] Replace any other `unwrap()` calls with graceful error handling
+
+### 4. Improve error handling in search_logic.rs
+
+- [x] Log all errors with `eprintln!` (not just `println!` for search start)
+- [x] Ensure all error paths set `APP_STATE.write().is_loading = false`
 
 ## Notes
 
-- API response: `QueryResult.query_info.total_results` (u64) = total matching items across all pages
-- API response: `QueryResult.results` = items for current page only (already used)
-- `size(15)` + `offset` already passed correctly to API
-- Only missing link: `pagination.total` was never set from API response
+- The `AlreadyBorrowed` error: `pagination.read()` returns a `ReadGuard` that lives until the end of the `if` block in `if let Some(offset) = pagination.read().next_offset()`. When `perform_search` calls `pagination.write()`, the read guard is still active → panic.
+- Fix: `let offset = pagination.read().next_offset(); if let Some(offset) = offset { ... }` — guard dropped at end of statement.
+- `MEDOW_USER_AGENT.try_into().unwrap()` can panic if the string is too long for HeaderValue (max 64KB, but still — should be graceful).
