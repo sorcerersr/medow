@@ -15,13 +15,13 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 const MEDOW_USER_AGENT: &str = "Mozilla/5.0 Linux Medow/0.1";
 
 // Navigation function
-pub fn navigate(view: View) {
+pub(crate) fn navigate(view: View) {
     APP_STATE.write().view = view;
 }
 
 // Enumeration to define the navigatable views
-#[derive(Clone, Copy)]
-enum View {
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum View {
     Search,
     Settings,
     Download,
@@ -60,7 +60,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     let view = APP_STATE.read().view;
-    let current_view = match *view {
+    let current_view = match view {
         View::Search => rsx! { search_view::search_view {} },
         View::Download => rsx! { downloads_view::downloads_view {} },
         View::Settings => rsx! { settings_view::settings_view {} },

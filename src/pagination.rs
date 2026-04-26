@@ -9,12 +9,14 @@ pub struct SearchItem {
     pub video_url: String,
 }
 
+#[allow(dead_code)]
 pub struct Pagination {
     pub total: usize,
     pub offset: usize,
     pub items: Vec<SearchItem>,
 }
 
+#[allow(dead_code)]
 impl Pagination {
     /// Creates a new Pagination instance with default values
     pub fn new() -> Self {

@@ -18,8 +18,7 @@ pub fn header_bar(pagination: Signal<Pagination>) -> Element {
                                 placeholder: "Search...",
                                 class: "input search-input",
                                 oninput: move |event_data| {
-                                    let value = event_data.value();
-                                    searchstring.set(event_data.value())
+                                    searchstring.set(event_data.value());
                                 },
                                 onkeydown: move |event_data| async move {
                                     if event_data.key() == Key::Enter {
