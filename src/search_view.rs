@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn header_bar(pagination: Signal<Pagination>) -> Element {
-    let mut searchstring = use_signal(|| String::new());
+    let mut searchstring = use_signal(String::new);
     rsx! {
         header {
             class: "sticky-header",
@@ -23,8 +23,6 @@ pub fn header_bar(pagination: Signal<Pagination>) -> Element {
                                 onkeydown: move |event_data| async move {
                                     if event_data.key() == Key::Enter {
                                         search_logic::perform_search(pagination, searchstring(), 0).await;
-                                    } else {
-                                        ()
                                     }
                                 }
                             }
@@ -135,7 +133,7 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
 
 #[component]
 pub fn search_view() -> Element {
-    let pagination = use_signal(|| Pagination::new());
+    let pagination = use_signal(Pagination::new);
 
     rsx! {
         header_bar { pagination }

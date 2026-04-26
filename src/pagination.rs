@@ -37,7 +37,7 @@ impl Pagination {
         if self.total == 0 {
             0
         } else {
-            (self.total + self.page_size() - 1) / self.page_size()
+            self.total.div_ceil(self.page_size())
         }
     }
 
