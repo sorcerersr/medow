@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use dirs::config_dir;
 use serde::{Deserialize, Serialize};
 
-pub const APP_NAME: &str = "medow";
 pub const CONFIG_DIR: &str = "medow";
 pub const CONFIG_FILE: &str = "config.toml";
 
