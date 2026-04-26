@@ -1,4 +1,4 @@
-use crate::{pagination::Pagination, search_logic, APP_STATE};
+use crate::{pagination::Pagination, search_logic, APP_STATE, View, navigate};
 use dioxus::prelude::*;
 
 #[component]
@@ -41,11 +41,23 @@ pub fn header_bar(pagination: Signal<Pagination>) -> Element {
                         }
                     }
                     ul {
-                        li {
-                            button { class: "button", "Downloads" }
+                        if APP_STATE.read().view != View::Download {
+                            li {
+                                button {
+                                    class: "button",
+                                    onclick: move |_| navigate(View::Download),
+                                    "Downloads"
+                                }
+                            }
                         }
-                        li {
-                            button { class: "button", "Settings" }
+                        if APP_STATE.read().view != View::Settings {
+                            li {
+                                button {
+                                    class: "button",
+                                    onclick: move |_| navigate(View::Settings),
+                                    "Settings"
+                                }
+                            }
                         }
                     }
                 }
