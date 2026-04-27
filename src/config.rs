@@ -6,19 +6,40 @@ use serde::{Deserialize, Serialize};
 
 pub const CONFIG_DIR: &str = "medow";
 pub const CONFIG_FILE: &str = "config.toml";
+pub const STATE_FILE: &str = "state.json";
+pub const DEFAULT_DOWNLOAD_DIR: &str = "Downloads/medow";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AppConfig {
     pub default_download_dir: String,
     pub quality_preference: String,
+    #[serde(default = "default_max_concurrent")]
+    pub max_concurrent_downloads: u32,
+}
+
+fn default_max_concurrent() -> u32 {
+    3
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            default_download_dir: String::from(""),
+            default_download_dir: String::new(),
             quality_preference: String::from("SD"),
+            max_concurrent_downloads: 3,
         }
+    }
+}
+
+/// Returns the resolved download directory (uses default if not configured)
+pub fn get_download_dir() -> PathBuf {
+    let config = load_config();
+    if !config.default_download_dir.is_empty() {
+        PathBuf::from(&config.default_download_dir)
+    } else if let Some(home) = dirs::home_dir() {
+        home.join(DEFAULT_DOWNLOAD_DIR)
+    } else {
+        PathBuf::from(DEFAULT_DOWNLOAD_DIR)
     }
 }
 

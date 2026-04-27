@@ -253,3 +253,77 @@ footer {
 	color: var(--pico-danger);
 	font-weight: 600;
 }
+
+.status-paused {
+	color: var(--pico-warning);
+	font-weight: 600;
+}
+
+.status-cancelled {
+	color: var(--pico-muted-color);
+	text-decoration: line-through;
+}
+
+.status-retry {
+	color: var(--pico-secondary);
+	font-weight: 600;
+}
+
+/* Download stats bar */
+.download-stats {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.5rem 1rem;
+	background: var(--pico-muted-border-color);
+	border-bottom: 1px solid var(--pico-muted-border-color);
+	font-size: 0.875rem;
+}
+
+.download-stats span {
+	white-space: nowrap;
+}
+
+/* Download row styling */
+.download-row {
+	transition: background-color 0.2s;
+}
+
+.download-row:hover {
+	background: var(--pico-hover-background-color);
+}
+
+.download-title {
+	max-width: 300px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.download-filename {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	color: var(--pico-muted-color);
+}
+
+.download-controls {
+	display: flex;
+	gap: 0.25rem;
+}
+
+.download-controls .button.small {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.75rem;
+	min-width: 2rem;
+}
+
+/* Download action buttons */
+.download-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	padding: 1rem 0;
+}

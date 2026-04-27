@@ -184,6 +184,10 @@ pub fn search_view() -> Element {
                                     url: item.video_url.clone(),
                                     filename: downloads::generate_filename(&item.title, &item.video_url),
                                     status: downloads::DownloadStatus::Idle,
+                                    total_size: None,
+                                    downloaded_bytes: 0,
+                                    current_rate: 0.0,
+                                    est_time_remaining: None,
                                 })
                                 .collect();
 

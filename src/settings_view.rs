@@ -42,11 +42,13 @@ fn header_bar() -> Element {
 pub fn settings_view() -> Element {
     let mut download_dir = use_signal(|| CONFIG.read().default_download_dir.clone());
     let mut quality = use_signal(|| CONFIG.read().quality_preference.clone());
+    let mut max_concurrent = use_signal(|| CONFIG.read().max_concurrent_downloads);
 
-    async fn save_settings(download_dir: &str, quality: &str) -> Result<(), String> {
+    async fn save_settings(download_dir: &str, quality: &str, max_concurrent: u32) -> Result<(), String> {
         let app_config = config::AppConfig {
             default_download_dir: download_dir.to_string(),
             quality_preference: quality.to_string(),
+            max_concurrent_downloads: max_concurrent,
         };
         config::save_config(&app_config)
     }
@@ -78,19 +80,49 @@ pub fn settings_view() -> Element {
                                 {
                                     let path = selected.to_string_lossy().to_string();
                                     download_dir.set(path.clone());
-                                    if let Err(e) = save_settings(&path, &quality.read().clone()).await {
+                                    if let Err(e) = save_settings(&path, &quality.read().clone(), max_concurrent()).await {
                                         crate::toast::show_toast(&format!("Save failed: {e}"), crate::toast::ToastType::Error(e));
                                     } else {
                                         crate::toast::show_toast("Settings saved", crate::toast::ToastType::Success);
                                         *CONFIG.write() = config::AppConfig {
                                             default_download_dir: path,
                                             quality_preference: quality.read().clone(),
+                                            max_concurrent_downloads: max_concurrent(),
                                         };
                                     }
                                 }
                             },
                             "Browse"
                         }
+                    }
+                    label { "Max Concurrent Downloads" }
+                    div { class: "dir-input-group",
+                        input {
+                            r#type: "number",
+                            value: "{max_concurrent()}",
+                            min: "1",
+                            max: "10",
+                            class: "form-control",
+                            oninput: move |e| {
+                                if let Ok(val) = e.value().parse::<u32>() {
+                                    max_concurrent.set(val.clamp(1, 10));
+                                }
+                            },
+                            onblur: move |_| async move {
+                                let val = max_concurrent();
+                                if let Err(e) = save_settings(&download_dir.read().clone(), &quality.read().clone(), val).await {
+                                    crate::toast::show_toast(&format!("Save failed: {e}"), crate::toast::ToastType::Error(e));
+                                } else {
+                                    crate::toast::show_toast("Settings saved", crate::toast::ToastType::Success);
+                                    *CONFIG.write() = config::AppConfig {
+                                        default_download_dir: download_dir.read().clone(),
+                                        quality_preference: quality.read().clone(),
+                                        max_concurrent_downloads: val,
+                                    };
+                                }
+                            },
+                        }
+                        p { class: "help-text", "Download at most this many files simultaneously (1-10)" }
                     }
                     label { "Quality Preference" }
                     select {
@@ -99,13 +131,14 @@ pub fn settings_view() -> Element {
                         onchange: move |e| async move {
                             let new_quality = e.value();
                             quality.set(new_quality.clone());
-                            if let Err(e) = save_settings(&download_dir.read().clone(), &new_quality).await {
+                            if let Err(e) = save_settings(&download_dir.read().clone(), &new_quality, max_concurrent()).await {
                                 crate::toast::show_toast(&format!("Save failed: {e}"), crate::toast::ToastType::Error(e));
                             } else {
                                 crate::toast::show_toast("Settings saved", crate::toast::ToastType::Success);
                                 *CONFIG.write() = config::AppConfig {
                                     default_download_dir: download_dir.read().clone(),
                                     quality_preference: new_quality,
+                                    max_concurrent_downloads: max_concurrent(),
                                 };
                             }
                         },
