@@ -1,3 +1,9 @@
 target
+
+
+# ai tooling related temporary files and directories
 .pisession
 .pi-lens
+task_plan.md
+progress.md
+findings.md
