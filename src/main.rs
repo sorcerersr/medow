@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use dioxus::desktop::tao;
 use dioxus::prelude::*;
 
@@ -34,6 +36,10 @@ struct AppState {
     view: View,
     error: Option<String>,
     is_loading: bool,
+    // Selected items: video_url -> (title, topic), persists across pagination
+    selected_items: HashMap<String, (String, String)>,
+    // Generated download shell script
+    download_script: Option<String>,
 }
 
 // init application wide state
@@ -41,6 +47,8 @@ static APP_STATE: GlobalSignal<AppState> = Signal::global(|| AppState {
     view: View::Search,
     error: Option::None,
     is_loading: false,
+    selected_items: HashMap::new(),
+    download_script: None,
 });
 
 // Global config signal

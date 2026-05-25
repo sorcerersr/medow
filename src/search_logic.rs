@@ -2,6 +2,7 @@ use crate::{
     pagination::{Pagination, SearchItem},
     APP_STATE, CONFIG, MEDOW_USER_AGENT,
 };
+use std::collections::HashMap;
 use dioxus::prelude::*;
 use mediathekviewweb::Mediathek;
 
@@ -123,6 +124,12 @@ pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, o
             }
         })
         .collect();
+
+    // Restore selections from global state
+    let selected_items: HashMap<String, (String, String)> = APP_STATE.read().selected_items.clone();
+    for item in search_items.iter_mut() {
+        item.selected = selected_items.contains_key(&item.video_url);
+    }
 
     // Update the items signal with the new search results
     pagination.write().items.clear();

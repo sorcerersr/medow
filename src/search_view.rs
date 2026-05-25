@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{navigate, pagination::Pagination, search_logic, View, APP_STATE};
 use dioxus::prelude::*;
 
@@ -62,10 +64,50 @@ pub fn header_bar(pagination: Signal<Pagination>, mut searchstring: Signal<Strin
     }
 }
 
+/// Sanitize a string for use in a filename
+pub fn sanitize_filename(s: &str) -> String {
+    s.trim()
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == '.' || c == '_' || c == '-' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+/// Extract file extension from URL, defaulting to "mp4"
+pub fn extract_extension(url: &str) -> &str {
+    if let Some(filename) = url.rsplit('/').next() {
+        let name = filename.split('?').next().unwrap_or(filename);
+        if let Some(ext) = name.rsplit('.').next() {
+            if !ext.is_empty() && ext != name {
+                return ext;
+            }
+        }
+    }
+    "mp4"
+}
+
 #[component]
 fn media_table(pagination: Signal<Pagination>) -> Element {
-    // Create a signal for the header checkbox state
-    let mut header_selected = use_signal(|| false);
+    // Memo: total selected across all pages
+    let total_selected_count = use_memo(|| APP_STATE.read().selected_items.len());
+
+    // Memo: header checkbox state based on current page items
+    let header_state = use_memo({
+        let pagination = pagination;
+        move || {
+            let all_selected = pagination.read().items.iter().all(|i| i.selected);
+            let any_selected = pagination.read().items.iter().any(|i| i.selected);
+            let none_selected = !any_selected;
+            let indeterminate = !all_selected && !none_selected;
+            (all_selected, indeterminate)
+        }
+    });
+
     rsx! {
         table {
             thead {
@@ -74,13 +116,29 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
                         scope: "col",
                         input {
                             r#type: "checkbox",
-                            checked: header_selected(),
-                            oninput: move |e| {
-                                let checked = e.checked();
-                                header_selected.set(checked);
-                                // Update all items' selected state
+                            checked: header_state().0,
+                            class: if header_state().1 { "indeterminate" } else { "" },
+                            oninput: move |_| {
+                                // Determine new state: if all selected → deselect all, otherwise select all
+                                let all_selected = pagination.read().items.iter().all(|item| item.selected);
+                                let new_state = !all_selected;
+
+                                // Update items
                                 for item in pagination.write().items.iter_mut() {
-                                    item.selected = checked;
+                                    item.selected = new_state;
+                                }
+
+                                // Sync with global selection set
+                                let items_info: Vec<(String, String, String)> = pagination.read().items.iter().map(|i| (i.video_url.clone(), i.title.clone(), i.topic.clone())).collect();
+                                {
+                                    let mut state = APP_STATE.write();
+                                    for (url, title, topic) in items_info {
+                                        if new_state {
+                                            state.selected_items.insert(url, (title, topic));
+                                        } else {
+                                            state.selected_items.remove(&url);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -100,19 +158,23 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
                             input {
                                 r#type: "checkbox",
                                 checked: item.selected,
-                                oninput: move |e| {
-                                    let checked = e.checked();
-                                    // Update the specific item by index
-                                    pagination.write().items[index].selected = checked;
+                                oninput: move |_| {
+                                    let video_url = pagination.read().items[index].video_url.clone();
+                                    let was_selected = pagination.read().items[index].selected;
 
-                                    // Update header checkbox based on all items
-                                    let all_selected = pagination.read().items.iter().all(|item| item.selected);
-                                    let any_selected = pagination.read().items.iter().any(|item| item.selected);
+                                    // Toggle item selection
+                                    pagination.write().items[index].selected = !was_selected;
 
-                                    if all_selected {
-                                        header_selected.set(true);
-                                    } else if !any_selected {
-                                        header_selected.set(false);
+                                    // Sync with global selection set
+                                    let item_title = pagination.read().items[index].title.clone();
+                                    let item_topic = pagination.read().items[index].topic.clone();
+                                    {
+                                        let mut state = APP_STATE.write();
+                                        if was_selected {
+                                            state.selected_items.remove(&video_url);
+                                        } else {
+                                            state.selected_items.insert(video_url, (item_title, item_topic));
+                                        }
                                     }
                                 }
                             }
@@ -124,6 +186,71 @@ fn media_table(pagination: Signal<Pagination>) -> Element {
                         td { "{item.duration}" }
                         td { "{item.quality}" }
                     }
+                }
+            }
+        }
+        // Download button below the table
+        if total_selected_count() > 0 {
+            div {
+                class: "download-bar",
+                p {
+                    class: "download-info",
+                    "Selected: {total_selected_count()} item",
+                    if total_selected_count() != 1 { "s" }
+                }
+                button {
+                    class: "button download-button",
+                    onclick: move |_| {
+                        // Collect all selected items with full info from global state
+                        let selected_items: HashMap<String, (String, String)> = APP_STATE.read().selected_items.clone();
+
+                        let max_concurrent = 5;
+                        // Collect commands into a vector for stable ordering
+                        let mut commands: Vec<String> = Vec::new();
+                        for (video_url, (title, topic)) in &selected_items {
+                            let title_part = sanitize_filename(title);
+                            let topic_part = sanitize_filename(topic);
+                            let ext = extract_extension(video_url);
+                            let filename = format!("{}_{}.{}", title_part, topic_part, ext);
+                            commands.push(format!(
+                                "wget -t 0 -c -O \"{}\" \"{}\" &",
+                                filename, video_url
+                            ));
+                        }
+
+                        // Emit in blocks of max_concurrent, with `wait` between blocks
+                        let mut script_lines: Vec<String> = vec![
+                            "#!/bin/bash".to_string(),
+                            "# Medow Download Script".to_string(),
+                            format!(
+                                "# {} files to download ({} per batch)",
+                                commands.len(),
+                                max_concurrent
+                            ),
+                            String::new(),
+                        ];
+
+                        let total_batches = commands.len().div_ceil(max_concurrent);
+                        for (batch_num, chunk) in commands.chunks(max_concurrent).enumerate() {
+                            let batch = batch_num + 1;
+                            script_lines.push(format!(
+                                "echo \"Starting batch {}/{}...\"",
+                                batch, total_batches
+                            ));
+                            script_lines.extend(chunk.iter().cloned());
+                            script_lines.push(String::new());
+                            script_lines.push("# Wait for this batch to complete".to_string());
+                            script_lines.push("wait".to_string());
+                            script_lines.push(String::new());
+                        }
+
+                        script_lines.push("echo \"All downloads complete.\"".to_string());
+
+                        let script = script_lines.join("\n");
+                        APP_STATE.write().download_script = Some(script);
+                        navigate(View::Download);
+                    },
+                    "📥 Generate Download Script"
                 }
             }
         }

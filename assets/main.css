@@ -225,3 +225,65 @@ footer {
 .dir-input-group input {
 	flex: 1;
 }
+
+/* Download bar below search table */
+.download-bar {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.75rem 1rem;
+	margin-top: 0.5rem;
+	background: var(--pico-card-background-color);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--pico-border-radius);
+}
+
+.download-info {
+	margin: 0;
+	font-weight: 600;
+	color: var(--pico-secondary);
+}
+
+.download-button {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	font-weight: 600;
+}
+
+/* Indeterminate checkbox visual */
+input[type="checkbox"].indeterminate {
+	accent-color: var(--pico-primary);
+	opacity: 0.6;
+}
+
+/* Download script display */
+.download-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.copy-button {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	font-weight: 600;
+}
+
+.download-script {
+	background: var(--pico-code-background-color);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--pico-border-radius);
+	padding: 1rem;
+	overflow-x: auto;
+	max-height: 70vh;
+	overflow-y: auto;
+	font-size: 0.8rem;
+	line-height: 1.5;
+}
+
+.download-script code {
+	background: transparent;
+	padding: 0;
+	font-family: "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+	font-size: inherit;
+}
