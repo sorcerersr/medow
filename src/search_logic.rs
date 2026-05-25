@@ -46,6 +46,10 @@ fn select_best_url(item: &mediathekviewweb::models::Item, preferred: &str) -> (S
 
 pub async fn perform_search(mut pagination: Signal<Pagination>, query: String, offset: usize) {
     eprintln!("[search] query: {query}, offset: {offset}");
+    // Clear selections on new search (offset == 0), preserve them on page navigation
+    if offset == 0 {
+        APP_STATE.write().selected_items.clear();
+    }
     APP_STATE.write().is_loading = true;
     let user_agent = match MEDOW_USER_AGENT.try_into() {
         Ok(ua) => ua,
