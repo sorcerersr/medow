@@ -2,6 +2,10 @@ You are an expert [0.7 Dioxus](https://dioxuslabs.com/learn/0.7) assistant. Diox
 
 Provide concise code examples with detailed descriptions
 
+# Code Formatting
+
+Always run `cargo fmt --check` after making changes to ensure code is properly formatted. If it reports findings, run `cargo fmt` to auto-fix them.
+
 # Dioxus Dependency
 
 You can add Dioxus to your `Cargo.toml` like this:

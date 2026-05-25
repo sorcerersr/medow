@@ -2,9 +2,9 @@ use crate::{
     pagination::{Pagination, SearchItem},
     APP_STATE, CONFIG, MEDOW_USER_AGENT,
 };
-use std::collections::HashMap;
 use dioxus::prelude::*;
 use mediathekviewweb::Mediathek;
+use std::collections::HashMap;
 
 /// Select the best video URL based on quality preference
 fn select_best_url(item: &mediathekviewweb::models::Item, preferred: &str) -> (String, String) {
